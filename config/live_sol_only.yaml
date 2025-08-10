@@ -1,4 +1,5 @@
-mode: live
+mode: paper
+pair: SOL/USDC
 paper: true
 timeframe: 1h
 poll_seconds: 60
@@ -38,4 +39,4 @@ strategy_params:
 
 execution:
   venue: sol_jupiter
-  slippage_bps: 40
+  slippage_bps: 50
