@@ -1,40 +1,46 @@
-import os
 import json
-import base64
 import base58
 import requests
 import pandas as pd
 from typing import Dict, Any
 from solana.rpc.api import Client as SolClient
 
-BIRDEYE_BASE = "https://public-api.birdeye.so/defi/v3/ohlcv"
+# Avoid using any proxy that may be configured in the environment. Many
+# corporate or CI environments expose an HTTP(S)_PROXY variable which causes
+# outbound requests to be tunnelled through a proxy that can reject unknown
+# hosts (returning 403). Setting explicit `None` values disables proxy usage in
+# `requests.get` and makes the error easier to diagnose for the user.
+NO_PROXY = {"http": None, "https": None}
 
-def fetch_ohlcv_birdeye(base_mint: str, quote_mint: str, timeframe: str, limit: int) -> pd.DataFrame:
-    api_key = os.getenv("BIRDEYE_API_KEY", "")
-    if not api_key:
-        raise RuntimeError("BIRDEYE_API_KEY not set in environment")
+DEXSCREENER_BASE = "https://api.dexscreener.com/latest/dex"
 
-    params = {
-        "address": base_mint,     # token mint address (SOL wrapped mint for SOL/USDC)
-        "type": timeframe,        # "1m","5m","15m","1h","4h","1d"
-        "limit": int(limit),
-    }
-    headers = {
-        "X-API-KEY": api_key,
-        "accept": "application/json",
-        "x-chain": "solana",
-    }
-
-    r = requests.get(BIRDEYE_BASE, params=params, headers=headers, timeout=20)
-    r.raise_for_status()
-    data = r.json().get("data", {})
-    candles = data.get("items", [])
+def fetch_ohlcv_dexscreener(chain: str, dex: str, pair_address: str, timeframe: str, limit: int) -> pd.DataFrame:
+    """Fetch OHLCV data from DexScreener for a given DEX pair."""
+    url = f"{DEXSCREENER_BASE}/candles/{chain}/{dex}/{pair_address}"
+    params = {"timeframe": timeframe, "limit": int(limit)}
+    try:
+        r = requests.get(url, params=params, timeout=20, proxies=NO_PROXY)
+        r.raise_for_status()
+    except requests.exceptions.ProxyError as exc:
+        raise RuntimeError(
+            "DexScreener request blocked by proxy. Unset HTTP(S)_PROXY or "
+            "ensure outbound access to api.dexscreener.com"
+        ) from exc
+    except requests.RequestException as exc:
+        raise RuntimeError(f"DexScreener request failed: {exc}") from exc
+    candles = r.json().get("candles", [])
     if not candles:
-        raise RuntimeError("No candles returned from Birdeye v3 API")
+        raise RuntimeError("No candles returned from DexScreener API")
 
-    df = pd.DataFrame(candles).rename(
-        columns={"unixTime": "timestamp", "o": "open", "h": "high", "l": "low", "c": "close", "v": "volume"}
-    )
+    df = pd.DataFrame(candles)
+    df.rename(columns={
+        "t": "timestamp",
+        "o": "open",
+        "h": "high",
+        "l": "low",
+        "c": "close",
+        "v": "volume",
+    }, inplace=True)
     df["timestamp"] = pd.to_datetime(df["timestamp"], unit="s", utc=True)
     df.set_index("timestamp", inplace=True)
     return df[["open", "high", "low", "close", "volume"]].astype(float)
