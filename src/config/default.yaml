@@ -1,0 +1,43 @@
+mode: PAPER
+rpcUrl: ${SOLANA_RPC_URL}
+walletPrivateKey: ${PRIVATE_KEY}
+pair:
+  baseMint: "So11111111111111111111111111111111111111112"
+  quoteMint: "Es9vMFrzaCERz..."
+marketData:
+  timeframe: "1m"
+  lookback: 720
+  provider: "dexscreener"
+  cacheTtlSec: 30
+strategy:
+  name: "momentum"
+  params:
+    fastEMA: 9
+    slowEMA: 21
+    rsiPeriod: 14
+    rsiBuy: 55
+    rsiSell: 45
+    minVolUsd: 200000
+    confirmBars: 2
+risk:
+  maxPortfolioExposurePct: 60
+  perTradeRiskPct: 1.0
+  atrPeriod: 14
+  atrStopMult: 2.0
+  takeProfitRR: 2.0
+  slipPct: 0.25
+  maxOpenPositions: 1
+execution:
+  jupiter:
+    maxSlippageBps: 150
+    retry:
+      attempts: 3
+      backoffMs: 500
+logging:
+  level: "info"
+  json: true
+backtest:
+  startingEquity: 10000
+  feePct: 0.002
+  start: "2025-01-01"
+  end: "2025-08-01"
