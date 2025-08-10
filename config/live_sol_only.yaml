@@ -1,8 +1,15 @@
-mode: live
+mode: paper
+pair: SOL/USDC
 paper: true
 timeframe: 1h
 poll_seconds: 60
 lookback_bars: 720
+
+dex:
+  chain: solana
+  name: raydium
+  # SOL/USDC Raydium pool address; replace if using a different DEX pair
+  pair_address: 7voC5KF1uHmiiQwMq5sDUK4tmAbpuWrWwjtXK7h7qS7C
 
 symbols:
   - name: SOL/USDC
@@ -38,4 +45,4 @@ strategy_params:
 
 execution:
   venue: sol_jupiter
-  slippage_bps: 40
+  slippage_bps: 50
