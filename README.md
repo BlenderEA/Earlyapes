@@ -1,7 +1,7 @@
 # EARLY APE DEGENERATOR — SOL/USDC (Jupiter DEX)
 
 This is a **rules‑based, non‑guessing** bot that trades **SOL/USDC** on Solana using **Jupiter** for execution
-and **Birdeye** for candles. Paper mode by default.
+and **DexScreener** for candles. Paper mode by default.
 
 
 ███████╗ █████╗ ██████╗ ██╗  ██╗██╗   ██╗     █████╗ ██████╗ ███████╗
@@ -23,7 +23,9 @@ pip install -r requirements.txt
 
 # Environment
 copy .env.example .env   # or: cp .env.example .env
-# Fill SOLANA_RPC_URL and BIRDEYE_API_KEY (wallet keys optional in paper)
+# Fill SOLANA_RPC_URL (wallet keys optional in paper; DexScreener needs no API key)
+# If you are behind a corporate proxy that blocks outbound traffic,
+# unset HTTP(S)_PROXY variables so the bot can reach api.dexscreener.com
 
 # Run (paper mode)
 python -m bot.live.run_jupiter --config config/live_sol_only.yaml
@@ -43,7 +45,7 @@ python -m bot.live.run_jupiter --config config/live_sol_only.yaml
 
 ## Files
 - `bot/live/run_jupiter.py` — main loop + ASCII banner
-- `bot/data/solana_dex.py` — Birdeye candles + Jupiter executor (paper/live)
+- `bot/data/solana_dex.py` — DexScreener candles + Jupiter executor (paper/live)
 - `bot/signals/*` — indicators & proxies
 - `config/live_sol_only.yaml` — SOL/USDC only, `capital: 0.25` in SOL
-- `.env.example` — RPC, Birdeye key, optional wallet keys
+- `.env.example` — RPC, optional wallet keys
