@@ -1,0 +1,41 @@
+mode: live
+paper: true
+timeframe: 1h
+poll_seconds: 60
+lookback_bars: 720
+
+symbols:
+  - name: SOL/USDC
+    base_mint:  So11111111111111111111111111111111111111112
+    quote_mint: EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v
+    base_decimals: 9
+    quote_decimals: 6
+    min_notional_usd: 20
+
+# bankroll in SOL
+capital: 0.25
+capital_units: base  # 'usd' or 'base'
+
+risk:
+  target_vol_short: 0.30
+  target_vol_swing: 0.22
+  max_dd: 0.20
+  max_notional_per_asset: 0.8
+  max_gross_leverage: 1.0
+  cool_off_after_losses: 3
+
+strategy_params:
+  short_term:
+    roc5: 5
+    roc20: 20
+    sopr_spike_exit: 0.020
+  swing:
+    ma_long: 120
+    ema_fast: 21
+    ema_mid: 55
+    sopr_gate: 1.0
+    mvrv_upper_pct: 0.90
+
+execution:
+  venue: sol_jupiter
+  slippage_bps: 40
