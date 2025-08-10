@@ -4,21 +4,14 @@ import yaml
 from datetime import datetime, timezone
 from pathlib import Path
 from dotenv import load_dotenv, find_dotenv
-from bot.data.solana_dex import fetch_ohlcv_birdeye, JupiterExecutor
+from bot.data.solana_dex import fetch_ohlcv_dexscreener, JupiterExecutor
 
 # robust .env loading (project root)
 ROOT = Path(__file__).resolve().parents[2]   # -> project folder
 env_path = ROOT / ".env"
 load_dotenv(dotenv_path=str(env_path), override=True)
-if not os.getenv("BIRDEYE_API_KEY"):
-    # fallback: search upwards from CWD just in case
-    load_dotenv(find_dotenv(usecwd=True), override=True)
-
-# optional: quick diagnostic
-print("ENV check → BIRDEYE_API_KEY set?", bool(os.getenv("BIRDEYE_API_KEY")))
-
-
-load_dotenv()                           # <-- add (before reading env vars)
+# fallback: search upwards from CWD just in case
+load_dotenv(find_dotenv(usecwd=True), override=True)
 
 
 def print_banner():
@@ -41,6 +34,10 @@ def main():
     tf = cfg.get("timeframe", "1h")
     lookback_bars = int(cfg.get("lookback_bars", 720))
     poll = int(cfg.get("poll_seconds", 60))
+    dex_cfg = cfg.get("dex", {})
+    chain = dex_cfg.get("chain", "solana")
+    dex = dex_cfg.get("name", "raydium")
+    pair_address = dex_cfg.get("pair_address", "")
 
     print_banner()
     mode = "LIVE" if not paper else "PAPER"
@@ -57,13 +54,14 @@ def main():
     while True:
         try:
             pair = cfg["symbols"][0]
-            df = fetch_ohlcv_birdeye(
-                base_mint=pair["base_mint"],
-                quote_mint=pair["quote_mint"],
+            df = fetch_ohlcv_dexscreener(
+                chain=chain,
+                dex=dex,
+                pair_address=pair_address,
                 timeframe=tf,
                 limit=lookback_bars,
             )
-            print(f"[{datetime.now(timezone.utc).isoformat()}] Got {len(df)} bars for {pair['name']}")
+            print(f"[{datetime.now(timezone.utc).isoformat()}] Got {len(df)} bars for {pair['name']} from {dex}")
         except Exception as e:
             print(f"[{datetime.now(timezone.utc).isoformat()}] loop error: {e}")
         time.sleep(poll)
